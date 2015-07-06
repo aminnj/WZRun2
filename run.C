@@ -1,5 +1,5 @@
 {
-    gROOT->ProcessLine(".L ../Software/dataMCplotMaker/dataMCplotMaker.cc+");
+    gROOT->ProcessLine(".L ../software/dataMCplotMaker/dataMCplotMaker.cc+");
     gROOT->ProcessLine(".L SS.cc+");
     gROOT->ProcessLine(".L scan.C+");
     //njetsLow, njetsHigh, btagCut, metLow, metHigh, htLow, htHigh, tag

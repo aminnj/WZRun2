@@ -33,6 +33,8 @@ namespace ss {
 	const int &lep2_mc_id() { return samesign.lep2_mc_id(); }
 	const int &lep1_id() { return samesign.lep1_id(); }
 	const int &lep2_id() { return samesign.lep2_id(); }
+	const float &lep1_coneCorrPt() { return samesign.lep1_coneCorrPt(); }
+	const float &lep2_coneCorrPt() { return samesign.lep2_coneCorrPt(); }
 	const int &lep1_idx() { return samesign.lep1_idx(); }
 	const int &lep2_idx() { return samesign.lep2_idx(); }
 	const vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > > &jets() { return samesign.jets(); }
@@ -48,6 +50,7 @@ namespace ss {
 	const float &mt() { return samesign.mt(); }
 	const float &mt_l2() { return samesign.mt_l2(); }
 	const float &mt2() { return samesign.mt2(); }
+	const float &mtmin() { return samesign.mtmin(); }
 	const float &mGluino() { return samesign.mGluino(); }
 	const float &mLSP() { return samesign.mLSP(); }
 	const float &mSbottom() { return samesign.mSbottom(); }
@@ -70,6 +73,10 @@ namespace ss {
 	const vector<int> &genps_id_grandma() { return samesign.genps_id_grandma(); }
 	const bool &lep1_passes_id() { return samesign.lep1_passes_id(); }
 	const bool &lep2_passes_id() { return samesign.lep2_passes_id(); }
+	const bool &lep3_passes_id() { return samesign.lep3_passes_id(); }
+	const bool &lep3_tight() { return samesign.lep3_tight(); }
+	const bool &lep3_veto() { return samesign.lep3_veto(); }
+	const bool &lep3_fo() { return samesign.lep3_fo(); }
 	const float &lep1_dxyPV() { return samesign.lep1_dxyPV(); }
 	const float &lep2_dxyPV() { return samesign.lep2_dxyPV(); }
 	const float &lep1_dZ() { return samesign.lep1_dZ(); }
@@ -78,6 +85,8 @@ namespace ss {
 	const float &lep2_d0_err() { return samesign.lep2_d0_err(); }
 	const float &lep1_ip3d() { return samesign.lep1_ip3d(); }
 	const float &lep2_ip3d() { return samesign.lep2_ip3d(); }
+	const float &lep1_MVA() { return samesign.lep1_MVA(); }
+	const float &lep2_MVA() { return samesign.lep2_MVA(); }
 	const float &lep1_ip3d_err() { return samesign.lep1_ip3d_err(); }
 	const float &lep2_ip3d_err() { return samesign.lep2_ip3d_err(); }
 	const int &nVetoElectrons7() { return samesign.nVetoElectrons7(); }
@@ -104,7 +113,7 @@ namespace ss {
 	const vector<float> &eleID_sclphiwidth() { return samesign.eleID_sclphiwidth(); }
 	const vector<float> &eleID_he() { return samesign.eleID_he(); }
 	const vector<float> &eleID_psEoverEraw() { return samesign.eleID_psEoverEraw(); }
-	const vector<float> &eleID_kfchi2   () { return samesign.eleID_kfchi2   (); }
+	const vector<float> &eleID_kfchi2() { return samesign.eleID_kfchi2(); }
 	const vector<float> &eleID_chi2_hits() { return samesign.eleID_chi2_hits(); }
 	const vector<float> &eleID_fbrem() { return samesign.eleID_fbrem(); }
 	const vector<float> &eleID_ep() { return samesign.eleID_ep(); }
@@ -123,4 +132,19 @@ namespace ss {
 	const vector<float> &muID_medMuonPOG() { return samesign.muID_medMuonPOG(); }
 	const vector<float> &muID_pt() { return samesign.muID_pt(); }
 	const vector<float> &muID_eta() { return samesign.muID_eta(); }
+	const vector<float> &trueNumInt() { return samesign.trueNumInt(); }
+	const vector<int> &nPUvertices() { return samesign.nPUvertices(); }
+	const int &nGoodVertices() { return samesign.nGoodVertices(); }
+	const bool &lep1_isGoodLeg() { return samesign.lep1_isGoodLeg(); }
+	const bool &lep2_isGoodLeg() { return samesign.lep2_isGoodLeg(); }
+	const bool &lep1_isFakeLeg() { return samesign.lep1_isFakeLeg(); }
+	const bool &lep2_isFakeLeg() { return samesign.lep2_isFakeLeg(); }
+	const bool &lep1_multiIso() { return samesign.lep1_multiIso(); }
+	const bool &lep2_multiIso() { return samesign.lep2_multiIso(); }
+	const float &lep1_sip() { return samesign.lep1_sip(); }
+	const float &lep2_sip() { return samesign.lep2_sip(); }
+	const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > &lep1_closeJet() { return samesign.lep1_closeJet(); }
+	const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > &lep2_closeJet() { return samesign.lep2_closeJet(); }
+	const bool &passed_id_inSituFR_lep1() { return samesign.passed_id_inSituFR_lep1(); }
+	const bool &passed_id_inSituFR_lep2() { return samesign.passed_id_inSituFR_lep2(); }
 }

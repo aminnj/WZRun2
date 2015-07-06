@@ -1,5 +1,5 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
-#include "../Software/dataMCplotMaker/dataMCplotMaker.h"
+#include "../software/dataMCplotMaker/dataMCplotMaker.h"
 
 //Regular includes
 #include "TFile.h"
@@ -27,12 +27,22 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     TChain *ch = new TChain("t");
     std::vector<std::string> titles;
 
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.26/TTBAR_0.root");   titles.push_back("tt");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.26/DY1_0.root");     titles.push_back("DY");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.26/TTW_0.root");     titles.push_back("ttW");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.26/TTZ_0.root");     titles.push_back("ttZ");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.26/WJets1_0.root");  titles.push_back("WJets");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.26/WZ_0.root");      titles.push_back("WZ");
+
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.26/TTBAR_0.root");   titles.push_back("tt");
+
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTBAR_0.root");   titles.push_back("tt");
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/DY1_0.root");     titles.push_back("DY");
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTW_0.root");     titles.push_back("ttW");
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTZ_0.root");     titles.push_back("ttZ");
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WJets1_0.root");  titles.push_back("WJets");
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WZ_0.root");      titles.push_back("WZ");
+
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTBAR_0.root");   titles.push_back("tt");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/DY1_0.root");     titles.push_back("DY");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTW_0.root");     titles.push_back("ttW");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTZ_0.root");     titles.push_back("ttZ");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WJets1_0.root");  titles.push_back("WJets");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WZ_0.root");      titles.push_back("WZ");
 
     int nEventsTotal = 0;
     int nEventsChain = ch->GetEntries();
@@ -53,6 +63,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     vector<TH1F*> h1D_nbtags_vec;
     vector<TH1F*> h1D_btagval_vec;
 
+    TString prevFilename = "";
     // File Loop
     while ( (currentFile = (TFile*)fileIter.Next()) ) { 
 
@@ -62,6 +73,25 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
         samesign.Init(tree);
 
         TString filename(currentFile->GetTitle());
+        // if(filename != prevFilename) {
+        //     std::cout << filename << std::endl;
+        //     prevFilename = filename;
+        // }
+
+        // if(filename.Contains("TTBAR")) filename = "TTBAR";
+        // else if(filename.Contains("DY")) filename = "DY";
+        // else if(filename.Contains("TTW")) filename = "TTW";
+        // else if(filename.Contains("TTZ")) filename = "TTZ";
+        // else if(filename.Contains("WJets")) filename = "WJets";
+        // else if(filename.Contains("WZ")) filename = "WZ";
+        // else {
+        //     std::cout << "I don't know what " << filename << " is!" << std::endl;
+        //     std::cout << "I don't know what " << filename << " is!" << std::endl;
+        // }
+
+
+        // TObjArray *tx = filename.Tokenize("_");
+        // filename = ((TObjString *)(tx->At(0)))->String();
 
         TH1F* h1D_njets_file = new TH1F("njets"+filename, "Njets;;Entries", 15, 0, 15); h1D_njets_file->Sumw2();
         TH1F* h1D_ht_file = new TH1F("ht"+filename, "H_{T};GeV;Entries", 20, 0, 600); 
@@ -149,6 +179,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
             } else {
                 if( !ss::lep2_passes_id() ) continue;
             }
+            if( !ss::lep3_passes_id() ) continue;
 
 
             if(fabs(zmass - 91.2) > zmassCut) continue;
@@ -160,7 +191,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
             if(ss::njets() < njetsLow || ss::njets() > njetsHigh) continue;
 
             // We are now in the region of interest
-            
+
 
             for(int iJet = 0; iJet < ss::jets().size(); iJet++) {
                 fill(h1D_nbtagval_file, ss::jets_disc().at(iJet),scale);
@@ -181,10 +212,11 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
     }//file loop MCMC
 
-    std::cout << " nGoodEvents: " << nGoodEvents << " nEventsTotal: " << nEventsTotal << std::endl;
+    std::cout << "nGoodEventsWeighted: " << nGoodEventsWeighted << " nGoodEvents: " << nGoodEvents << " nEventsTotal: " << nEventsTotal << std::endl;
 
     TH1F* null = new TH1F("","",1,0,1);
-    std::string com = "--preserveBackgroundOrder --showPercentage --outputName pdfs"+tag+"/";
+    // std::string com = "--preserveBackgroundOrder --showPercentage --outputName pdfs"+tag+"/";
+    std::string com = "--showPercentage --outputName pdfs"+tag+"/";
 
     dataMCplotMaker(null,h1D_njets_vec     ,titles,"","",com+"h1D_njets.pdf     --isLinear --xAxisOverride njets --overrideHeader Njets");
     dataMCplotMaker(null,h1D_ht_vec        ,titles,"","",com+"h1D_ht.pdf        --isLinear --xAxisOverride [GeV] --overrideHeader H_{T}");
