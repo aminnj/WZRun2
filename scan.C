@@ -48,7 +48,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     int nEventsChain = ch->GetEntries();
     int nGoodEvents = 0;
     float nGoodEventsWeighted = 0;
-    float luminosity = 19.5;
+    float luminosity = 10.0;
 
     TFile *currentFile = 0;
     TObjArray *listOfFiles = ch->GetListOfFiles();
@@ -62,8 +62,10 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     vector<TH1F*> h1D_hyp_class_vec;
     vector<TH1F*> h1D_nbtags_vec;
     vector<TH1F*> h1D_btagval_vec;
+    vector<TH1F*> h1D_mtmin_vec;
 
     TString prevFilename = "";
+    initCounter();
     // File Loop
     while ( (currentFile = (TFile*)fileIter.Next()) ) { 
 
@@ -73,21 +75,21 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
         samesign.Init(tree);
 
         TString filename(currentFile->GetTitle());
-        // if(filename != prevFilename) {
-        //     std::cout << filename << std::endl;
-        //     prevFilename = filename;
-        // }
+        if(filename != prevFilename) {
+            std::cout << filename << std::endl;
+            prevFilename = filename;
+        }
 
-        // if(filename.Contains("TTBAR")) filename = "TTBAR";
-        // else if(filename.Contains("DY")) filename = "DY";
-        // else if(filename.Contains("TTW")) filename = "TTW";
-        // else if(filename.Contains("TTZ")) filename = "TTZ";
-        // else if(filename.Contains("WJets")) filename = "WJets";
-        // else if(filename.Contains("WZ")) filename = "WZ";
-        // else {
-        //     std::cout << "I don't know what " << filename << " is!" << std::endl;
-        //     std::cout << "I don't know what " << filename << " is!" << std::endl;
-        // }
+        if(filename.Contains("TTBAR")) filename = "TTBAR";
+        else if(filename.Contains("DY")) filename = "DY";
+        else if(filename.Contains("TTW")) filename = "TTW";
+        else if(filename.Contains("TTZ")) filename = "TTZ";
+        else if(filename.Contains("WJets")) filename = "WJets";
+        else if(filename.Contains("WZ")) filename = "WZ";
+        else {
+            std::cout << "I don't know what " << filename << " is!" << std::endl;
+            std::cout << "I don't know what " << filename << " is!" << std::endl;
+        }
 
 
         // TObjArray *tx = filename.Tokenize("_");
@@ -101,11 +103,13 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
         TH1F* h1D_hyp_class_file = new TH1F("hypclass"+filename, "hyp_class;ID;Entries", 7, 0, 7); 
         TH1F* h1D_nbtags_file = new TH1F("nbtags"+filename, "Nbtags;nbtags;Entries", 7, 0, 7); 
         TH1F* h1D_nbtagval_file = new TH1F("btagval"+filename, "Btag;Btag;Entries", 30, 0, 1.0); 
+        TH1F* h1D_mtmin_file = new TH1F("mtmin"+filename, "mtmin;mtmin;Entries", 20, 0, 400); 
 
         h1D_njets_vec.push_back(h1D_njets_file); 
         h1D_ht_vec.push_back(h1D_ht_file); 
         h1D_met_vec.push_back(h1D_met_file); 
         h1D_mt_vec.push_back(h1D_mt_file); 
+        h1D_mtmin_vec.push_back(h1D_mtmin_file); 
         h1D_zmass_vec.push_back(h1D_zmass_file); 
         h1D_hyp_class_vec.push_back(h1D_hyp_class_file); 
         h1D_nbtags_vec.push_back(h1D_nbtags_file); 
@@ -123,34 +127,12 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
             float scale = ss::scale1fb()  * luminosity;
 
-
-
-            // selections from
-            // http://www.t2.ucsd.edu/tastwiki/pub/CMS/20140801AgendaMinutesSnT/08-01-14_WZ_Summary.pdf
-            // => has 3 leptons
-            // => each lepton passes loose selections:
-            //   - |\eta| < 2.4
-            //   - p_T > 20
-            // => has same-flavor, opposite-sign lepton pair with mass within 15 GeV of m_Z
-            // => tight requirement on lepton from the W (samesign::isNumeratorLepton() OLD)
-            // => jet requirements:
-            //   - |\eta| < 2.4
-            //   - p_T > 40
-            //   - passesLoosePFJetID()
-            //   - \DeltaR > 0.4 between jet and any of the 3 leptons
-            // => general requirements:
-            //   - MET > 30
-            //   - #btags < 1
-
-
             // fill these before making cuts
             fill(h1D_hyp_class_file, ss::hyp_class(), scale);
-            fill(h1D_nbtags_file, ss::nbtags(), scale);
 
             // this guarantees that the third lepton makes a Z with one of the first two leptons
             if(ss::hyp_class() != 6) continue;
 
-            if(ss::met() < metLow || ss::met() > metHigh) continue;
 
 
             // require that leptons have pt>20 and |eta|<2.4 ("loose requirements")
@@ -159,7 +141,6 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
             // did lep1 and lep3 come from a Z?
             bool lep1FromZ;
-            //
             // figure out which pair has inv mass closest to Z
             float zmass23 = ss::lep2_id() == -ss::lep3_id() ? (ss::lep2_p4()+ss::lep3_p4()).mass() : -1.0;
             float zmass31 = ss::lep3_id() == -ss::lep1_id() ? (ss::lep3_p4()+ss::lep1_p4()).mass() : -1.0;
@@ -175,29 +156,31 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
             // now we impose a tighter requirement on the lepton from the W
             if( lep1FromZ ) {
-                if( !ss::lep1_passes_id() ) continue;
-            } else {
                 if( !ss::lep2_passes_id() ) continue;
+            } else {
+                if( !ss::lep1_passes_id() ) continue;
             }
             if( !ss::lep3_passes_id() ) continue;
+            // if( !ss::lep3_tight() ) continue;
+            // if( !ss::lep3_veto() ) continue;
+            // if( !ss::lep3_fo() ) continue;
 
-
+            if(ss::met() < metLow || ss::met() > metHigh) continue;
             if(fabs(zmass - 91.2) > zmassCut) continue;
-
             if(ss::ht() < htLow || ss::ht() > htHigh) continue;
-
-            if(ss::nbtags() >= btagCut) continue;
-
             if(ss::njets() < njetsLow || ss::njets() > njetsHigh) continue;
 
             // We are now in the region of interest
 
 
+            fill(h1D_nbtags_file, ss::nbtags(), scale);
+            if(ss::nbtags() >= btagCut) continue;
+
             for(int iJet = 0; iJet < ss::jets().size(); iJet++) {
                 fill(h1D_nbtagval_file, ss::jets_disc().at(iJet),scale);
             }
-
             fill(h1D_mt_file,ss::mt(), scale);
+            fill(h1D_mtmin_file,ss::mtmin(), scale);
             fill(h1D_zmass_file,zmass, scale); 
             fill(h1D_njets_file,ss::njets(), scale);
             fill(h1D_ht_file,ss::ht(), scale);
@@ -205,6 +188,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
             nGoodEvents++;
             nGoodEventsWeighted+=scale;
+            addToCounter(filename, scale);
 
 
 
@@ -213,18 +197,21 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     }//file loop MCMC
 
     std::cout << "nGoodEventsWeighted: " << nGoodEventsWeighted << " nGoodEvents: " << nGoodEvents << " nEventsTotal: " << nEventsTotal << std::endl;
+    printCounter();
 
     TH1F* null = new TH1F("","",1,0,1);
     // std::string com = "--preserveBackgroundOrder --showPercentage --outputName pdfs"+tag+"/";
-    std::string com = "--showPercentage --outputName pdfs"+tag+"/";
+    std::string com = "--noDivisionLabel --showPercentage --outputName pdfs"+tag+"/";
 
-    dataMCplotMaker(null,h1D_njets_vec     ,titles,"","",com+"h1D_njets.pdf     --isLinear --xAxisOverride njets --overrideHeader Njets");
-    dataMCplotMaker(null,h1D_ht_vec        ,titles,"","",com+"h1D_ht.pdf        --isLinear --xAxisOverride [GeV] --overrideHeader H_{T}");
-    dataMCplotMaker(null,h1D_met_vec       ,titles,"","",com+"h1D_met.pdf       --isLinear --xAxisOverride [GeV] --overrideHeader #slash{E}_{T}");
-    dataMCplotMaker(null,h1D_zmass_vec     ,titles,"","",com+"h1D_zmass.pdf     --isLinear --xAxisOverride [GeV] --overrideHeader m_{Z}");
-    dataMCplotMaker(null,h1D_hyp_class_vec ,titles,"","",com+"h1D_hyp_class.pdf            --xAxisOverride id    --overrideHeader hyp_class (no cuts)");
-    dataMCplotMaker(null,h1D_nbtags_vec    ,titles,"","",com+"h1D_nbtags.pdf    --isLinear --xAxisOverride n     --overrideHeader Nbtags (no cuts)");
-    dataMCplotMaker(null,h1D_btagval_vec   ,titles,"","",com+"h1D_btagval.pdf   --isLinear --xAxisOverride disc  --overrideHeader Btag disc");
+    dataMCplotMaker(null,h1D_njets_vec     ,titles,"Njets","",com+"h1D_njets.pdf                   --isLinear --xAxisOverride njets ");
+    dataMCplotMaker(null,h1D_ht_vec        ,titles,"H_{T}","",com+"h1D_ht.pdf                      --isLinear --xAxisOverride [GeV] ");
+    dataMCplotMaker(null,h1D_mt_vec        ,titles,"m_{T}","",com+"h1D_mt.pdf                      --isLinear --xAxisOverride [GeV] ");
+    dataMCplotMaker(null,h1D_mtmin_vec     ,titles,"m_{T,min}","",com+"h1D_mtmin.pdf               --isLinear --xAxisOverride [GeV] ");
+    dataMCplotMaker(null,h1D_met_vec       ,titles,"#slash{E}_{T}","",com+"h1D_met.pdf             --isLinear --xAxisOverride [GeV] ");
+    dataMCplotMaker(null,h1D_zmass_vec     ,titles,"m_{Z}","",com+"h1D_zmass.pdf                   --isLinear --xAxisOverride [GeV] ");
+    dataMCplotMaker(null,h1D_hyp_class_vec ,titles,"hyp_class (no cuts)","",com+"h1D_hyp_class.pdf            --xAxisOverride id    ");
+    dataMCplotMaker(null,h1D_nbtags_vec    ,titles,"Nbtags (no cuts)","",com+"h1D_nbtags.pdf                  --xAxisOverride n     ");
+    dataMCplotMaker(null,h1D_btagval_vec   ,titles,"Btag disc","",com+"h1D_btagval.pdf             --isLinear --xAxisOverride disc  ");
 
     return 0;
 }
