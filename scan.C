@@ -17,6 +17,7 @@
 #include "utils.C"
 #include "../CORE/SSSelections.h"
 #include "../Tools/dorky/dorky.cc"
+#include "../Tools/goodrun.cc"
 // #include "Include.C"
 
 using namespace std;
@@ -77,6 +78,10 @@ int mySRHH() {
 
 int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999, int metLow=0, int metHigh=9999, int htLow=0, int htHigh=9999, std::string tag=""){
     //njetsLow, njetsHigh, btagCut, metLow, metHigh, htLow, htHigh, tag, manualScale
+
+    const char* json_file = "Run2015BGoldenPlus.txt";
+    // const char* json_file = "Run2015BGolden.txt";
+    set_goodrun_file(json_file);
 
     float zmassCut = 15;
 
@@ -187,9 +192,12 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
             float scale = 1.0;
             if(!ss::is_real_data()) {
                 scale = ss::scale1fb() * luminosity;
+            } else {
 
                 DorkyEventIdentifier id(ss::run(), ss::event(), ss::lumi());
                 if (is_duplicate(id) ) continue;
+                
+                if (!goodrun(ss::run(), ss::lumi()) ) continue;
             }
 
             // fill these before making cuts
@@ -294,7 +302,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
     // TH1F* null = new TH1F("","",1,0,1);
     TH1F* data;
-    std::string com = "--errHistAtBottom --doCounts --lumi 22.9 --lumiUnit pb --showPercentage --legendUp 0.05 --noDivisionLabel --noType --outputName pdfs"+tag+"/";
+    std::string com = "--errHistAtBottom --doCounts --colorTitle --lumi 22.9 --lumiUnit pb --showPercentage --legendUp 0.05 --noDivisionLabel --noType --outputName pdfs"+tag+"/";
     // std::string pct = " --showPercentage ";
     // std::string spec = "SR1-8";
     std::string spec = "";
@@ -321,8 +329,8 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     data = h1D_nbtags_vec.back(); h1D_nbtags_vec.pop_back();
     dataMCplotMaker(data,h1D_nbtags_vec    ,titles,"Nbtags",spec,com+"h1D_nbtags.pdf                 --isLinear --xAxisOverride n     ");
 
-    data = h1D_yields_HH_vec.back(); h1D_yields_HH_vec.pop_back();
-    dataMCplotMaker(data,h1D_yields_HH_vec ,titles,"HH yields",spec,com+"h1D_yields_HH.pdf --isLinear --xAxisOverride SR "+HHbins);
+    // data = h1D_yields_HH_vec.back(); h1D_yields_HH_vec.pop_back();
+    // dataMCplotMaker(data,h1D_yields_HH_vec ,titles,"HH yields",spec,com+"h1D_yields_HH.pdf --isLinear --xAxisOverride SR "+HHbins);
 
     // data = h1D_yields_HL_vec.back(); h1D_yields_HL_vec.pop_back();
     // dataMCplotMaker(data,h1D_yields_HL_vec ,titles,"HL yields",spec,com+"h1D_yields_HL.pdf --isLinear --xAxisOverride SR "+HLbins+pct);
