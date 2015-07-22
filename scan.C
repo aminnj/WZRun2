@@ -23,59 +23,6 @@
 using namespace std;
 using namespace duplicate_removal;
 
-int mySRHH() {
-    //Reject events out of kinematic acceptance
-    if (ss::met() < 30) return -1;  // XXX change back to default of 50
-    if (ss::njets() < 2) return -1; 
-    if (ss::met() > 500 && ss::ht() < 300) return -1; 
-
-    if (ss::met() > 500) return 31;
-    if (ss::ht() > 1600) return 32; 
-    if (ss::ht() < 300){
-        if (ss::nbtags() == 0 && ss::mtmin() < 120 && ss::met() < 200 && ss::njets() <= 4) return 1; 
-        if (ss::nbtags() == 0) return 3; 
-        if (ss::nbtags() == 1 && ss::mtmin() < 120 && ss::met() < 200 && ss::njets() <= 4) return 9; 
-        if (ss::nbtags() == 1) return 11; 
-        if (ss::nbtags() == 2 && ss::mtmin() < 120 && ss::met() < 200 && ss::njets() <= 4) return 17; 
-        if (ss::nbtags() == 2) return 19; 
-        if (ss::nbtags() >= 3 && ss::mtmin() < 120 && ss::met() < 200) return 25; 
-        if (ss::nbtags() >= 3 && ss::mtmin() < 120 && ss::met() >= 200) return 27; 
-        if (ss::nbtags() >= 3) return 29;
-    }
-    if (ss::ht() > 300 && ss::ht() < 1600){
-        if (ss::nbtags() == 0){
-            if (ss::mtmin() < 120 && ss::met() < 200 && ss::njets() <= 4) return 2; 
-            if (ss::mtmin() < 120 && ss::met() < 200 && ss::njets() > 4) return 4; 
-            if (ss::mtmin() < 120 && ss::met() >= 200 && ss::njets() <= 4) return 5; 
-            if (ss::mtmin() < 120 && ss::met() >= 200 && ss::njets() > 4) return 6; 
-            if (ss::mtmin() >= 120 && ss::met() < 200 && ss::njets() <= 4) return 7;
-            return 8;
-        } 
-        if (ss::nbtags() == 1){
-            if (ss::mtmin() < 120 && ss::met() < 200 && ss::njets() <= 4) return 10; 
-            if (ss::mtmin() < 120 && ss::met() < 200 && ss::njets() > 4) return 12; 
-            if (ss::mtmin() < 120 && ss::met() >= 200 && ss::njets() <= 4) return 13; 
-            if (ss::mtmin() < 120 && ss::met() >= 200 && ss::njets() > 4) return 14; 
-            if (ss::mtmin() >= 120 && ss::met() < 200 && ss::njets() <= 4) return 15;
-            return 16;
-        } 
-        if (ss::nbtags() == 2){
-            if (ss::mtmin() < 120 && ss::met() < 200 && ss::njets() <= 4) return 18; 
-            if (ss::mtmin() < 120 && ss::met() < 200 && ss::njets() > 4) return 20; 
-            if (ss::mtmin() < 120 && ss::met() >= 200 && ss::njets() <= 4) return 21; 
-            if (ss::mtmin() < 120 && ss::met() >= 200 && ss::njets() > 4) return 22; 
-            if (ss::mtmin() >= 120 && ss::met() < 200 && ss::njets() <= 4) return 23;
-            return 24;
-        } 
-        if (ss::nbtags() >= 3){
-            if (ss::mtmin() < 120 && ss::met() < 200) return 26;
-            if (ss::mtmin() < 120 && ss::met() >= 200) return 28;
-            if (ss::mtmin() >= 120) return 30;
-        }
-    }
-    return -1;
-}
-
 int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999, int metLow=0, int metHigh=9999, int htLow=0, int htHigh=9999, std::string tag=""){
     //njetsLow, njetsHigh, btagCut, metLow, metHigh, htLow, htHigh, tag, manualScale
 
@@ -102,8 +49,9 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     int nGoodEvents = 0;
     int nGoodEventsData = 0;
     float nGoodEventsWeighted = 0;
-    float luminosityPB = 22.9;
-    float luminosity = luminosityPB/1000; // in fb^-1 !!
+    // float luminosityPB = 10000.0;
+    // float luminosity = luminosityPB/1000; // in fb^-1 !!
+    float luminosity = 3.0;
 
     TFile *currentFile = 0;
     TObjArray *listOfFiles = ch->GetListOfFiles();
@@ -119,6 +67,9 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     // vector<TH1F*> h1D_btagval_vec;
     vector<TH1F*> h1D_mtmin_vec;
 
+    vector<TH1F*> h1D_lep1pt_vec;
+    vector<TH1F*> h1D_lep2pt_vec;
+
     vector<TH1F*> h1D_yields_HH_vec;
     vector<TH1F*> h1D_yields_HL_vec;
     vector<TH1F*> h1D_yields_LL_vec;
@@ -126,15 +77,18 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     vector<TString> files = {"TTBAR","DY","TTW","TTZ","WJets","WZ","ZZ","Data"}; 
     for(int i = 0; i < files.size(); i++) {
 
-        TH1F* h1D_njets_file = new TH1F("njets"+files.at(i), "Njets;;Entries", 15, 0, 15);
+        TH1F* h1D_njets_file = new TH1F("njets"+files.at(i), "Njets;;Entries", 10, 0, 10);
         TH1F* h1D_ht_file = new TH1F("ht"+files.at(i), "H_{T};GeV;Entries", 20, 0, 1000); 
         TH1F* h1D_met_file = new TH1F("met"+files.at(i), "#slash{E}_{T};GeV;Entries", 20, 0, 300); 
         TH1F* h1D_mt_file = new TH1F("mt"+files.at(i), "M_{T};GeV;Entries", 20, 0, 450); 
         TH1F* h1D_zmass_file = new TH1F("zmass"+files.at(i), "Z Mass;GeV;Entries", 42, 70, 112); 
         TH1F* h1D_hyp_class_file = new TH1F("hypclass"+files.at(i), "hyp_class;ID;Entries", 7, 0, 7); 
-        TH1F* h1D_nbtags_file = new TH1F("nbtags"+files.at(i), "Nbtags;nbtags;Entries", 7, 0, 7); 
+        TH1F* h1D_nbtags_file = new TH1F("nbtags"+files.at(i), "Nbtags;nbtags;Entries", 4, 0, 4); 
         // TH1F* h1D_btagval_file = new TH1F("btagval"+files.at(i), "Btag;Btag;Entries", 30, 0, 1.0); 
-        TH1F* h1D_mtmin_file = new TH1F("mtmin"+files.at(i), "mtmin;mtmin;Entries", 20, 0, 400); 
+        TH1F* h1D_mtmin_file = new TH1F("mtmin"+files.at(i), "mtmin;mtmin;Entries", 20, 0, 200); 
+
+        TH1F* h1D_lep1pt_file = new TH1F("lep1pt"+files.at(i), "lep1pt;lep1pt;Entries", 40, 0, 400); 
+        TH1F* h1D_lep2pt_file = new TH1F("lep2pt"+files.at(i), "lep2pt;lep2pt;Entries", 40, 0, 400); 
 
         TH1F* h1D_yields_HH_file = new TH1F("h1D_yields_HH"+files.at(i), "", 32, 1, 33); 
         TH1F* h1D_yields_HL_file = new TH1F("h1D_yields_HL"+files.at(i), "", 26, 1, 27); 
@@ -149,6 +103,8 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
         h1D_hyp_class_vec.push_back(h1D_hyp_class_file); 
         h1D_nbtags_vec.push_back(h1D_nbtags_file); 
         // h1D_btagval_vec.push_back(h1D_btagval_file); 
+        h1D_lep1pt_vec.push_back(h1D_lep1pt_file); 
+        h1D_lep2pt_vec.push_back(h1D_lep2pt_file); 
 
         h1D_yields_HH_vec.push_back(h1D_yields_HH_file);
         h1D_yields_HL_vec.push_back(h1D_yields_HL_file);
@@ -196,7 +152,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
                 DorkyEventIdentifier id(ss::run(), ss::event(), ss::lumi());
                 if (is_duplicate(id) ) continue;
-                
+
                 if (!goodrun(ss::run(), ss::lumi()) ) continue;
             }
 
@@ -204,7 +160,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
             fill(h1D_hyp_class_vec.at(iSample), ss::hyp_class(), scale);
 
             // this guarantees that the third lepton makes a Z with one of the first two leptons
-            if(ss::hyp_class() != 6) continue;
+            // if(ss::hyp_class() != 6) continue;
 
             // require that leptons have pt>20 and |eta|<2.4 ("loose requirements")
             if( ss::lep1_p4().pt() < 20.0 || ss::lep2_p4().pt() < 20.0 || ss::lep3_p4().pt() < 20.0 ) continue;
@@ -235,15 +191,10 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
             if(fabs(zmass - 91.2) > zmassCut) continue;
 
-            // std::cout << " ss::lep3_passes_id(): " << ss::lep3_passes_id() << " ss::lep3_id(): " << ss::lep3_id() << " ss::lep3_idx(): " << ss::lep3_idx() << std::endl;
-            // if( !ss::lep3_tight() ) continue;
-            // if( !ss::lep3_veto() ) continue;
-            // if( !ss::lep3_fo() ) continue;
-
-            if(ss::met() < metLow || ss::met() > metHigh) continue;
-            if(ss::ht() < htLow || ss::ht() > htHigh) continue;
-            if(ss::njets() < njetsLow || ss::njets() > njetsHigh) continue;
-            if(ss::nbtags() >= btagCut) continue;
+            // if(ss::met() < metLow || ss::met() > metHigh) continue;
+            // if(ss::ht() < htLow || ss::ht() > htHigh) continue;
+            // if(ss::njets() < njetsLow || ss::njets() > njetsHigh) continue;
+            // if(ss::nbtags() >= btagCut) continue;
 
             // We are now in the region of interest
             // anal_type_t categ = analysisCategory(ss::lep1_p4().pt(), ss::lep2_p4().pt());  
@@ -252,37 +203,62 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
             // int BR = baselineRegion(ss::njets(), ss::nbtags(), ss::met(), ss::ht(), ss::lep1_p4().pt(), ss::lep2_p4().pt());
 
-            // Select certain SRs. XXX Remember to update spec below too.
-            // if(SR < 1 || SR > 8 || categ != HighHigh) continue;
-            // if(categ != HighHigh) continue;
+            // all 4 of these define the CR
+            bool goodBtags = ss::nbtags() < 1;
+            bool goodNjets = ss::njets() >= 2;
+            bool goodMet = ss::met() > 30.0;
+            bool goodHH = ss::lep1_p4().pt() > 25.0 && ss::lep2_p4().pt() > 25.0;
 
 
-            // if(SR < 1 || SR > 8 || categ != HighHigh) continue;
-            // if(SR < 1 || SR > 8 ) continue;
-            // if(SR < 9 || SR > 16 ) continue;
+            // if(ss::nbtags() > 0) continue;
+            // if(ss::njets() < 2) continue;
+            // if(ss::met() < 30) continue;
+            // if(ss::lep1_p4().pt() < 25 || ss::lep2_p4().pt() < 25) continue;
 
 
 
-            // if(SR > -1) {
-            //     if(categ == HighHigh) h1D_yields_HH_vec.at(iSample)->Fill(SR, scale);
-            //     else if(categ == HighLow) h1D_yields_HL_vec.at(iSample)->Fill(SR, scale);
-            //     else if(categ == LowLow) h1D_yields_LL_vec.at(iSample)->Fill(SR, scale);
-            // }
+            if(goodBtags && goodMet && goodHH)  {
+                if(ss::njets() < 5)  addToCounter("njets<5_" +filename,scale);
+                if(ss::njets() >= 5) addToCounter("njets>=5_"+filename,scale);
+                fill(h1D_njets_vec.at(iSample),ss::njets(), scale);
+            }
 
-            // for(int iJet = 0; iJet < ss::jets().size(); iJet++) {
-            //     fill(h1D_btagval_vec.at(iSample), ss::jets_disc().at(iJet),scale);
-            // }
+            if(goodNjets && goodMet && goodHH)  {
+                if(ss::nbtags() < 1)  addToCounter("nbtags<1_" +filename,scale);
+                if(ss::nbtags() >= 1) addToCounter("nbtags>=1_"+filename,scale);
+                fill(h1D_nbtags_vec.at(iSample), ss::nbtags(), scale);
+            }
 
-            fill(h1D_nbtags_vec.at(iSample), ss::nbtags(), scale);
+            if(goodBtags && goodNjets && goodHH) {
+                if(ss::met() < 200)  addToCounter("met<200_" +filename,scale);
+                if(ss::met() >= 200) addToCounter("met>=200_"+filename,scale);
+                fill(h1D_met_vec.at(iSample),ss::met(), scale);
+            }
 
+            if(goodBtags && goodNjets && goodMet)  {
+                anal_type_t categ = analysisCategory(ss::lep1_p4().pt(), ss::lep2_p4().pt());  
+                if(categ == HighHigh) addToCounter("HH_" +filename,scale);
+                if(categ == HighLow)  addToCounter("HL_" +filename,scale);
+                fill(h1D_lep1pt_vec.at(iSample),ss::lep1_p4().pt(), scale);
+                fill(h1D_lep2pt_vec.at(iSample),ss::lep2_p4().pt(), scale);
+            }
+
+
+            if(! (goodBtags && goodNjets && goodMet && goodHH) ) continue;
+
+
+            if(ss::mtmin() < 120)  addToCounter("mtmin<120_" +filename,scale);
+            if(ss::mtmin() >= 120) addToCounter("mtmin>=120_"+filename,scale);
+
+            fill(h1D_mtmin_vec.at(iSample),ss::mtmin(), scale);
+
+            if(ss::ht() < 300)  addToCounter("ht<120_" +filename,scale);
+            if(ss::ht() >= 300) addToCounter("ht>=120_"+filename,scale);
+
+            fill(h1D_ht_vec.at(iSample),ss::ht(), scale);
 
             fill(h1D_mt_vec.at(iSample),ss::mt(), scale);
-            fill(h1D_mtmin_vec.at(iSample),ss::mtmin(), scale);
             fill(h1D_zmass_vec.at(iSample),zmass, scale); 
-            fill(h1D_njets_vec.at(iSample),ss::njets(), scale);
-            fill(h1D_ht_vec.at(iSample),ss::ht(), scale);
-            fill(h1D_met_vec.at(iSample),ss::met(), scale);
-
 
             if(!ss::is_real_data()) {
                 addToCounter(filename, scale);
@@ -302,7 +278,7 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
     // TH1F* null = new TH1F("","",1,0,1);
     TH1F* data;
-    std::string com = "--errHistAtBottom --doCounts --colorTitle --lumi 22.9 --lumiUnit pb --showPercentage --legendUp 0.05 --noDivisionLabel --noType --outputName pdfs"+tag+"/";
+    std::string com = " --errHistAtBottom --doCounts --colorTitle --lumi 3 --lumiUnit fb --percentageInBox --legendRight 0.05 --legendUp 0.05 --noDivisionLabel --noType --outputName pdfs"+tag+"/";
     // std::string pct = " --showPercentage ";
     // std::string spec = "SR1-8";
     std::string spec = "";
@@ -311,23 +287,16 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
     std::string HLbins = " --xAxisVerticalBinLabels --xAxisBinLabels 1B,2B,3B,4B,5B,6B,7B,8B,9B,10B,11B,12B,13B,14B,15B,16B,17B,18B,19B,20B,21B,22B,23B,24B,25B,26B";
     std::string LLbins = " --xAxisVerticalBinLabels --xAxisBinLabels 1C,2C,3C,4C,5C,6C,7C,8C";
 
-    data = h1D_njets_vec.back(); h1D_njets_vec.pop_back();
-    dataMCplotMaker(data,h1D_njets_vec     ,titles,"Njets",spec,com+"h1D_njets.pdf                   --isLinear --xAxisOverride njets ");
+    data = h1D_njets_vec.back(); h1D_njets_vec.pop_back(); dataMCplotMaker(data,h1D_njets_vec    ,titles,"Njets",spec,com+"h1D_njets.pdf           --isLinear --vLine 5 --xAxisOverride njets");
+    data = h1D_ht_vec.back(); h1D_ht_vec.pop_back(); dataMCplotMaker(data,h1D_ht_vec             ,titles,"H_{T}",spec,com+"h1D_ht.pdf              --isLinear --vLine 300 --xAxisOverride [GeV]");
+    data = h1D_mtmin_vec.back(); h1D_mtmin_vec.pop_back(); dataMCplotMaker(data,h1D_mtmin_vec    ,titles,"m_{T,min}",spec,com+"h1D_mtmin.pdf       --isLinear --vLine 120 --xAxisOverride [GeV]");
+    data = h1D_met_vec.back(); h1D_met_vec.pop_back(); dataMCplotMaker(data,h1D_met_vec          ,titles,"#slash{E}_{T}",spec,com+"h1D_met.pdf     --isLinear --vLine 200 --xAxisOverride [GeV]");
+    data = h1D_nbtags_vec.back(); h1D_nbtags_vec.pop_back(); dataMCplotMaker(data,h1D_nbtags_vec ,titles,"Nbtags",spec,com+"h1D_nbtags.pdf         --isLinear --vLine 1 --xAxisOverride n");
+    data = h1D_lep1pt_vec.back(); h1D_lep1pt_vec.pop_back(); dataMCplotMaker(data,h1D_lep1pt_vec ,titles,"p_{T}(lep_{1})",spec,com+"h1D_lep1pt.pdf --isLinear --vLine 25 --xAxisOverride [GeV]");
+    data = h1D_lep2pt_vec.back(); h1D_lep2pt_vec.pop_back(); dataMCplotMaker(data,h1D_lep2pt_vec ,titles,"p_{T}(lep_{2})",spec,com+"h1D_lep2pt.pdf --isLinear --vLine 25 --xAxisOverride [GeV]");
 
-    data = h1D_ht_vec.back(); h1D_ht_vec.pop_back();
-    dataMCplotMaker(data,h1D_ht_vec        ,titles,"H_{T}",spec,com+"h1D_ht.pdf                      --isLinear --xAxisOverride [GeV] ");
-
-    data = h1D_mt_vec.back(); h1D_mt_vec.pop_back();
-    dataMCplotMaker(data,h1D_mt_vec        ,titles,"m_{T}",spec,com+"h1D_mt.pdf                      --isLinear --xAxisOverride [GeV] ");
-
-    data = h1D_mtmin_vec.back(); h1D_mtmin_vec.pop_back();
-    dataMCplotMaker(data,h1D_mtmin_vec     ,titles,"m_{T,min}",spec,com+"h1D_mtmin.pdf               --isLinear --xAxisOverride [GeV] ");
-
-    data = h1D_met_vec.back(); h1D_met_vec.pop_back();
-    dataMCplotMaker(data,h1D_met_vec       ,titles,"#slash{E}_{T}",spec,com+"h1D_met.pdf             --isLinear --xAxisOverride [GeV] ");
-
-    data = h1D_nbtags_vec.back(); h1D_nbtags_vec.pop_back();
-    dataMCplotMaker(data,h1D_nbtags_vec    ,titles,"Nbtags",spec,com+"h1D_nbtags.pdf                 --isLinear --xAxisOverride n     ");
+    // data = h1D_mt_vec.back(); h1D_mt_vec.pop_back();
+    // dataMCplotMaker(data,h1D_mt_vec        ,titles,"m_{T}",spec,com+"h1D_mt.pdf                      --isLinear --xAxisOverride [GeV] ");
 
     // data = h1D_yields_HH_vec.back(); h1D_yields_HH_vec.pop_back();
     // dataMCplotMaker(data,h1D_yields_HH_vec ,titles,"HH yields",spec,com+"h1D_yields_HH.pdf --isLinear --xAxisOverride SR "+HHbins);

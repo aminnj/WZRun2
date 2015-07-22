@@ -30,24 +30,30 @@ using namespace std;
 ///////////////////////////
 ////// counter stuff //////
 ///////////////////////////
-TH1D * evtCounter = new TH1D("","",1,0,1); 
-map<TString, double> evtMap;
+TH1D * evtCounter = new TH1D("","",500,0,500); 
+map<TString, int> evtBinMap;
+int evtBin = 0;
 void initCounter() {
-    evtCounter = new TH1D("","",1,0,1);
+    evtCounter = new TH1D("","",500,0,500); 
     evtCounter->Sumw2();
-    evtMap.clear();
+    evtBinMap.clear();
 }
 void addToCounter(TString name, double weight=1.0) {
-    evtCounter->Fill(0.5, weight);
-    if(evtMap.find(name) == evtMap.end() ) evtMap[name] = weight;
-    else evtMap[name] += weight;
+    if(evtBinMap.find(name) == evtBinMap.end() ) {
+        evtBinMap[name] = evtBin;
+        evtBin++;
+    }
+    evtCounter->Fill(evtBinMap[name], weight);
 }
 void printCounter() {
     cout << string(30, '-') << endl << "Counter totals: " << endl;
-    for(map<TString,double>::iterator it = evtMap.begin(); it != evtMap.end(); it++)
-        cout << "\t" << it->first << "\t\t" << it->second << endl;
-
-    cout << "Total: " << evtCounter->GetBinContent(1) << " pm " << evtCounter->GetBinError(1) << endl;
+    for(map<TString,int>::iterator it = evtBinMap.begin(); it != evtBinMap.end(); it++) {
+        int iBin = (it->second)+1;
+        printf("%-15s %6.2f %6.2f\n",
+                (it->first).Data(),
+                evtCounter->GetBinContent(iBin),
+                evtCounter->GetBinError(iBin) );
+    }
     cout << string(30, '-') << endl;
 }
 
