@@ -218,27 +218,27 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
 
 
             if(goodBtags && goodMet && goodHH)  {
-                if(ss::njets() < 5)  addToCounter("njets<5_" +filename,scale);
-                if(ss::njets() >= 5) addToCounter("njets>=5_"+filename,scale);
+                if(ss::njets() < 5)  addToCounter("1:njets<5_" +filename,scale);
+                if(ss::njets() >= 5) addToCounter("1:njets>=5_"+filename,scale);
                 fill(h1D_njets_vec.at(iSample),ss::njets(), scale);
             }
 
             if(goodNjets && goodMet && goodHH)  {
-                if(ss::nbtags() < 1)  addToCounter("nbtags<1_" +filename,scale);
-                if(ss::nbtags() >= 1) addToCounter("nbtags>=1_"+filename,scale);
+                if(ss::nbtags() < 1)  addToCounter("2:nbtags<1_" +filename,scale);
+                if(ss::nbtags() >= 1) addToCounter("2:nbtags>=1_"+filename,scale);
                 fill(h1D_nbtags_vec.at(iSample), ss::nbtags(), scale);
             }
 
             if(goodBtags && goodNjets && goodHH) {
-                if(ss::met() < 200)  addToCounter("met<200_" +filename,scale);
-                if(ss::met() >= 200) addToCounter("met>=200_"+filename,scale);
+                if(ss::met() < 200)  addToCounter("3:met<200_" +filename,scale);
+                if(ss::met() >= 200) addToCounter("3:met>=200_"+filename,scale);
                 fill(h1D_met_vec.at(iSample),ss::met(), scale);
             }
 
             if(goodBtags && goodNjets && goodMet)  {
                 anal_type_t categ = analysisCategory(ss::lep1_p4().pt(), ss::lep2_p4().pt());  
-                if(categ == HighHigh) addToCounter("HH_" +filename,scale);
-                if(categ == HighLow)  addToCounter("HL_" +filename,scale);
+                if(categ == HighHigh) addToCounter("6:HH_" +filename,scale);
+                if(categ == HighLow)  addToCounter("6:HL_" +filename,scale);
                 fill(h1D_lep1pt_vec.at(iSample),ss::lep1_p4().pt(), scale);
                 fill(h1D_lep2pt_vec.at(iSample),ss::lep2_p4().pt(), scale);
             }
@@ -247,13 +247,13 @@ int scan(unsigned int njetsLow=0, unsigned int njetsHigh=9999, int btagCut=9999,
             if(! (goodBtags && goodNjets && goodMet && goodHH) ) continue;
 
 
-            if(ss::mtmin() < 120)  addToCounter("mtmin<120_" +filename,scale);
-            if(ss::mtmin() >= 120) addToCounter("mtmin>=120_"+filename,scale);
+            if(ss::mtmin() < 120)  addToCounter("5:mtmin<120_" +filename,scale);
+            if(ss::mtmin() >= 120) addToCounter("5:mtmin>=120_"+filename,scale);
 
             fill(h1D_mtmin_vec.at(iSample),ss::mtmin(), scale);
 
-            if(ss::ht() < 300)  addToCounter("ht<120_" +filename,scale);
-            if(ss::ht() >= 300) addToCounter("ht>=120_"+filename,scale);
+            if(ss::ht() < 300)  addToCounter("4:ht<120_" +filename,scale);
+            if(ss::ht() >= 300) addToCounter("4:ht>=120_"+filename,scale);
 
             fill(h1D_ht_vec.at(iSample),ss::ht(), scale);
 
