@@ -5,7 +5,8 @@
     gROOT->ProcessLine(".L scan.C+");
     //    njetsLow, njetsHigh,  btagCut, metLow, metHigh, htLow, htHigh, tag
     
-    scan(    0    ,   9999   ,   9999  ,   0   ,   9999 ,   0  ,  9999 , ""  );
+    scan();
+    // scan(    0    ,   9999   ,   9999  ,   0   ,   9999 ,   0  ,  9999 , ""  );
     // scan(    0    ,   9999   ,   1  ,  30   ,   9999 ,   0  ,  9999 , ""  );
 
     // scan(    0    ,   9999   ,   1  ,  0   ,   9999 ,   0  ,  9999 , "_hhbt0"  );
