@@ -16,8 +16,8 @@
 
 #include "utils.C"
 #include "../CORE/SSSelections.h"
-#include "../Tools/dorky/dorky.cc"
-#include "../Tools/goodrun.cc"
+#include "../CORE/Tools/dorky/dorky.cc"
+#include "../CORE/Tools/goodrun.cc"
 // #include "Include.C"
 
 using namespace std;
