@@ -17,7 +17,7 @@
 #include "utils.C"
 #include "../CORE/SSSelections.h"
 #include "../CORE/Tools/dorky/dorky.cc"
-#include "../CORE/Tools/goodrun.cc"
+// #include "../CORE/Tools/goodrun.cc"
 // #include "Include.C"
 
 using namespace std;
@@ -27,9 +27,9 @@ using namespace duplicate_removal;
 int scan(){
     //njetsLow, njetsHigh, btagCut, metLow, metHigh, htLow, htHigh, tag, manualScale
 
-    const char* json_file = "Run2015BGoldenPlus.txt";
+    // const char* json_file = "Run2015BGoldenPlus.txt";
     // const char* json_file = "Run2015BGolden.txt";
-    set_goodrun_file(json_file);
+    // set_goodrun_file(json_file);
 
     float zmassCut = 15;
 
@@ -43,7 +43,8 @@ int scan(){
     ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WJets*_0.root"); titles.push_back("WJets");
     ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WZ_0.root");     titles.push_back("WZ");
     ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/ZZ_0.root");     titles.push_back("ZZ");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v2.03/*.root");
+    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v2.03/*.root");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v2.05/Data*_0.root");
     // ch->Add("/home/users/namin/2015/ss/v201/SSAnalysis/batch/babies/*.root");
 
     int nEventsTotal = 0;
@@ -79,6 +80,8 @@ int scan(){
     TH2F* h2D_met_mtmin_wz = new TH2F("met_mtmin", "", 20, 0, 300, 20, 0, 300); 
     TH2F* h2D_njets_nbtags_wz = new TH2F("njets_nbtags", "", 7,0,7, 7,0,7);
     TH2F* h2D_ptlep1_ptlep2_wz = new TH2F("ptlep1_ptlep2", "", 40,0,400, 40,0,400);
+    TH2F* h2D_ht_njets_wz = new TH2F("ht_njets_wz", "", 20,0,1000, 7,0,7);
+    TH2F* h2D_ht_sumleppt_wz = new TH2F("ht_sumleppt_wz", "", 20,0,1000, 40,0,400);
 
     vector<TString> files = {"TTBAR","DY","TTW","TTZ","WJets","WZ","ZZ","Data"}; 
     for(int i = 0; i < files.size(); i++) {
@@ -159,7 +162,7 @@ int scan(){
                 DorkyEventIdentifier id(ss::run(), ss::event(), ss::lumi());
                 if (is_duplicate(id) ) continue;
 
-                if (!goodrun(ss::run(), ss::lumi()) ) continue;
+                // if (!goodrun(ss::run(), ss::lumi()) ) continue;
             }
 
             // fill these before making cuts
@@ -223,6 +226,7 @@ int scan(){
 
 
 
+
             // if(ss::njets()>=2 && goodBtags && goodMet && goodHH)  {
             // if(goodBtags && goodMet && goodHH)  {
             // }
@@ -247,6 +251,8 @@ int scan(){
 
             if(filename.Contains("WZ"))    {
                 h2D_ptlep1_ptlep2_wz->Fill(ss::lep2_p4().pt(),ss::lep1_p4().pt());
+                h2D_ht_njets_wz->Fill(ss::ht(),ss::njets());
+                h2D_ht_sumleppt_wz->Fill( ss::ht(), ss::lep2_p4().pt()+ss::lep1_p4().pt() );
                 h2D_njets_nbtags_wz->Fill(ss::nbtags(),ss::njets());
                 h2D_met_mtmin_wz->Fill(ss::mtmin(),ss::met());
             }
@@ -311,6 +317,8 @@ int scan(){
         data = h1D_lep2pt_vec.back(); h1D_lep2pt_vec.pop_back(); dataMCplotMaker(data,h1D_lep2pt_vec ,titles,"p_{T}(lep_{2})",spec,com+"h1D_lep2pt.pdf --isLinear --vLine 25 --xAxisOverride [GeV]");
 
 
+        drawHist2D(h2D_ht_sumleppt_wz , "pdfs/h2D_ht_sumleppt_wz.pdf" , "--logscale --title WZ: p_{T}(lep_{1})+p_{T}(lep_{2}) vs H_{T} --xlabel  sum H_{T} --ylabel leppt");
+        drawHist2D(h2D_ht_njets_wz , "pdfs/h2D_ht_njets_wz.pdf" , "--logscale --title WZ: Njets vs H_{T} --xlabel  H_{T} --ylabel Njets");
         drawHist2D(h2D_ptlep1_ptlep2_wz , "pdfs/h2D_ptlep1_ptlep2_wz.pdf" , "--logscale --title WZ: p_{T}(lep_{1}) vs p_{T}(lep_{2}) --xlabel  ptlep2 --ylabel ptlep1");
         drawHist2D(h2D_njets_nbtags_wz  , "pdfs/h2D_njets_nbtags_wz.pdf"  , "--logscale --title WZ: Njets vs Nbtags --xlabel  nbtags --ylabel njets");
         drawHist2D(h2D_met_mtmin_wz     , "pdfs/h2D_met_mtmin_wz.pdf"     , "--logscale --title WZ: #slash{E}_{T} vs m_{T,min} --xlabel  mtmin --ylabel met");
