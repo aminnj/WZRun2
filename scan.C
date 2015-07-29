@@ -54,7 +54,7 @@ int scan(){
     float nGoodEventsWeighted = 0;
     // float luminosityPB = 10000.0;
     // float luminosity = luminosityPB/1000; // in fb^-1 !!
-    float luminosity = 3.0;
+    float luminosity = 10.0;
 
     TFile *currentFile = 0;
     TObjArray *listOfFiles = ch->GetListOfFiles();
@@ -209,7 +209,7 @@ int scan(){
 
             // if MET < 30 or Njets <= 2 then we don't care about considering it at all, even in the N-1 plots, so exclude it
             if(ss::met() < 30.0) continue;
-            if(ss::njets() <= 2) continue;
+            if(ss::njets() < 2) continue;
 
             // all 4 of these define the CR
             bool goodBtags = ss::nbtags() < 1;
@@ -291,7 +291,7 @@ int scan(){
 
     // TH1F* null = new TH1F("","",1,0,1);
     TH1F* data;
-    std::string com = " --errHistAtBottom --doCounts --colorTitle --lumi 3 --lumiUnit fb --percentageInBox --legendRight 0.05 --legendUp 0.05 --noDivisionLabel --noType --outputName pdfs/";
+    std::string com = " --errHistAtBottom --doCounts --colorTitle --lumi 10 --lumiUnit fb --percentageInBox --legendRight 0.05 --legendUp 0.05 --noDivisionLabel --noType --outputName pdfs/";
     // std::string pct = " --showPercentage ";
     // std::string spec = "SR1-8";
     std::string spec = "";

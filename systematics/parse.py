@@ -64,15 +64,18 @@ def SRtoCuts(srcode):
     return cuts
 
 def SRerrors(cuts):
-    finalWZ = 0.0
+    finalWZ = totalWZ
+    final = total
     finalErrSq = 0.0
     for cut in cuts:
-        WZ1, WZ2, relErrorWZ = mainCutCountErr[cut]
+        T1, T2, WZ1, WZ2, relErrorWZ = mainCutCountErr[cut]
         finalErrSq += relErrorWZ**2
+        finalWZ *= WZ2/WZ1
+        final *= T2/T1
 
     finalErrSq += (scaleFactorError/scaleFactor)**2
     finalRelErr = math.sqrt(finalErrSq)
-    return finalWZ, finalRelErr
+    return final, finalWZ, finalRelErr
 
 
 
@@ -198,15 +201,14 @@ for i,pair in enumerate(cutCountsPairs):
     errSyst1 = math.sqrt(errStatSyst1**2 - errStat1**2)
     relErrorWZ1 = errStatSyst1 / WZ1
 
-    # print cutName1, cutName2
-    if( cutName2.startswith("njets") ) : mainCutCountErr[1]  = [WZ1, WZ2, relErrorWZ2]
-    if( cutName2.startswith("nbtags") ): mainCutCountErr[2]  = [WZ1, WZ2, relErrorWZ2]
-    if( cutName2.startswith("met") )   : mainCutCountErr[3]  = [WZ1, WZ2, relErrorWZ2]
-    if( cutName2.startswith("ht") )    : mainCutCountErr[-4] = [WZ1, WZ2, relErrorWZ1]
-    if( cutName2.startswith("ht") )    : mainCutCountErr[4]  = [WZ1, WZ2, relErrorWZ2]
-    if( cutName2.startswith("mtmin") ) : mainCutCountErr[5]  = [WZ1, WZ2, relErrorWZ2]
-    if( cutName2.startswith("HL") )    : mainCutCountErr[6]  = [WZ1, WZ2, relErrorWZ2]
+    if( cutName2.startswith("njets") ) : mainCutCountErr[1]  = [T1, T2, WZ1, WZ2, relErrorWZ2]
+    if( cutName2.startswith("nbtags") ): mainCutCountErr[2]  = [T1, T2, WZ1, WZ2, relErrorWZ2]
+    if( cutName2.startswith("met") )   : mainCutCountErr[3]  = [T1, T2, WZ1, WZ2, relErrorWZ2]
+    if( cutName2.startswith("mtmin") ) : mainCutCountErr[5]  = [T1, T2, WZ1, WZ2, relErrorWZ2]
+    if( cutName2.startswith("HL") )    : mainCutCountErr[6]  = [T1, T2, WZ1, WZ2, relErrorWZ2]
 
+    if( cutName2.startswith("ht") )    : mainCutCountErr[-4] = [T1+T2, T1, WZ1+WZ2, WZ1, relErrorWZ1]
+    if( cutName2.startswith("ht") )    : mainCutCountErr[4]  = [T1+T2, T2, WZ1+WZ2, WZ2, relErrorWZ2]
 
     cutName1 = latexNames(cutName1)
     cutName2 = latexNames(cutName2)
@@ -224,22 +226,26 @@ for i,pair in enumerate(cutCountsPairs):
         print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ " % (cutName2, elem2[1], dT2, elem2[3], elem2[5])
 
 
-srYieldsHH = open("srYieldsHHtable.txt","w")
-srYieldsHL = open("srYieldsHLtable.txt","w")
-
-yieldsContent = open("yields.tex","r").read()
-yieldsFile = open("yieldsFilled.tex","w")
 
 srStrings = ["SR1A","SR2A","SR3Aa","SR3Ab","SR4A","SR5A","SR6A","SR7A","SR8A","SR9A","SR10A","SR11Aa","SR11Ab","SR12A","SR13A","SR14A","SR15A","SR16A","SR1B","SR2B","SR3B","SR4B","SR5B","SR6B","SR7B","SR8B","SR9B","SR10B","SR11B","SR12B"]
+
+# relative errors
+yieldsContent1 = open("yields.tex","r").read()
+yieldsContent2 = yieldsContent1[:]
+
+yieldsFile1, yieldsFile2 = open("yieldsFilled1.tex","w"), open("yieldsFilled2.tex","w")
+yieldsContent1 = yieldsContent1.replace("TITLEHH", "$\\delta$WZ/WZ for \\textbf{HighHigh}")
+yieldsContent1 = yieldsContent1.replace("TITLEHL", "$\\delta$WZ/WZ for \\textbf{HighLow}")
+yieldsContent2 = yieldsContent2.replace("TITLEHH", "Total (WZ) for \\textbf{HighHigh}")
+yieldsContent2 = yieldsContent2.replace("TITLEHL", "Total (WZ) for \\textbf{HighLow}")
+
 for srString in srStrings:
-    # if(srString == "SR1A"): continue
+    finalT, finalWZ, finalRelErr = SRerrors(SRtoCuts(srString))
+    yieldsContent1 = yieldsContent1.replace( srString, "\\textbf{%.2f} (%s)" % ( finalRelErr, srString ) )
+    yieldsContent2 = yieldsContent2.replace( srString, "\\textbf{%.2f} (%.2f)" % ( finalT, scaleFactor*finalWZ) )
 
-    finalWZ, finalRelErr = SRerrors(SRtoCuts(srString))
-    srYieldsHH.write( "%s | %.3f | %.2f \n" % (srString, finalWZ, finalRelErr) )
-    yieldsContent = yieldsContent.replace( srString, "\\textbf{%.2f} (%s)" % ( round(finalRelErr,2), srString ) )
+yieldsFile1.write(yieldsContent1)
+yieldsFile1.close()
+yieldsFile2.write(yieldsContent2)
+yieldsFile2.close()
 
-
-# print yieldsContent
-yieldsFile.write(yieldsContent)
-
-yieldsFile.close()
