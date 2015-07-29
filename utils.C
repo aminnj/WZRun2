@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <vector>
 #include <map>
+#include <iostream>
+#include <fstream>
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector;
 
@@ -45,7 +47,9 @@ void addToCounter(TString name, double weight=1.0) {
     }
     evtCounter->Fill(evtBinMap[name], weight);
 }
-void printCounter() {
+void printCounter(bool file = false) {
+    ofstream outfile;
+    if(file) outfile.open("counter.txt");
     cout << string(30, '-') << endl << "Counter totals: " << endl;
     for(map<TString,int>::iterator it = evtBinMap.begin(); it != evtBinMap.end(); it++) {
         int iBin = (it->second)+1;
@@ -53,8 +57,11 @@ void printCounter() {
                 (it->first).Data(),
                 evtCounter->GetBinContent(iBin),
                 evtCounter->GetBinError(iBin) );
+        if(file) outfile << (it->first).Data() << "  " << evtCounter->GetBinContent(iBin) << "  " << evtCounter->GetBinError(iBin) << endl;
     }
     cout << string(30, '-') << endl;
+    if(file) outfile.close();
+    if(file) cout << "Wrote counter to counter.txt" << endl;
 }
 
 
