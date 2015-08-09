@@ -157,7 +157,7 @@ b = t-w
 dw, dt, db = math.sqrt(w), math.sqrt(t), 0.3*b
 s = (t-b)/w
 scaleFactor,scaleFactorError = s,s*math.sqrt( (dw/w)**2 + (dt/w)**2 + (db/w)**2 )
-print "%.2f \\pm %.2f" % (scaleFactor, scaleFactorError)
+# print "%.2f \\pm %.2f" % (scaleFactor, scaleFactorError)
 
 # scaleFactor, scaleFactorError = 1.00, 0.00
 
@@ -221,10 +221,31 @@ for i,pair in enumerate(cutCountsPairs):
         print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ | $ %.2f\\pm %.2f~\\mathrm{(stat)}\\pm %.2f~\\mathrm{(sys)} $ | %.2f " \
                 % (cutName2, elem2[1], dT2, elem2[3], elem2[5], WZ2, errStat2, errSyst2, relErrorWZ2)
     else:
-        print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ | multirow 2 $ %.2f\\pm %.2f~\\mathrm{(stat)}\\pm %.2f~\\mathrm{(sys)} $ | multirow 2 %.2f " \
-                % (cutName1, elem1[1], dT1, elem1[3], elem1[5], WZ2, errStat2, errSyst2, relErrorWZ2)
-        print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ " % (cutName2, elem2[1], dT2, elem2[3], elem2[5])
+        # print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ | multirow 2 $ %.2f\\pm %.2f~\\mathrm{(stat)}\\pm %.2f~\\mathrm{(sys)} $ | multirow 2 %.2f " \
+        #         % (cutName1, elem1[1], dT1, elem1[3], elem1[5], WZ2, errStat2, errSyst2, relErrorWZ2)
+        # print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ " % (cutName2, elem2[1], dT2, elem2[3], elem2[5])
 
+        print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ | $ %.2f\\pm %.2f~\\mathrm{(stat)}\\pm %.2f~\\mathrm{(sys)} $ | %.2f " \
+                % (cutName1, elem1[1], dT1, elem1[3], elem1[5], WZ2, errStat2, errSyst2, relErrorWZ2)
+        print "$%-35s$ | $ %.2f \\pm %.2f $ |$ %.2f $ | $ %.1f \\%% $ | $ %.2f\\pm %.2f~\\mathrm{(stat)}\\pm %.2f~\\mathrm{(sys)} $ | %.2f " \
+                % (cutName2, elem2[1], dT2, elem2[3], elem2[5], WZ2, errStat2, errSyst2, relErrorWZ2)
+
+# read in SS SR yields
+srCodes = {}
+lines = open("sryields.txt","r").readlines()
+for line in lines:
+    if("_" not in line): continue
+    line = line.strip()
+    srCode = line.split()[0].split("_")[0]
+    sample = line.split()[0].split("_")[1]
+    count = float(line.split()[1])
+
+    if(srCode not in srCodes):
+        srCodes[srCode] = [ count, 0.0 ]
+    else: 
+        srCodes[srCode][0] += count
+
+    if(sample == "WZ"): srCodes[srCode][1] += count
 
 
 srStrings = ["SR1A","SR2A","SR3Aa","SR3Ab","SR4A","SR5A","SR6A","SR7A","SR8A","SR9A","SR10A","SR11Aa","SR11Ab","SR12A","SR13A","SR14A","SR15A","SR16A","SR1B","SR2B","SR3B","SR4B","SR5B","SR6B","SR7B","SR8B","SR9B","SR10B","SR11B","SR12B"]
@@ -232,20 +253,44 @@ srStrings = ["SR1A","SR2A","SR3Aa","SR3Ab","SR4A","SR5A","SR6A","SR7A","SR8A","S
 # relative errors
 yieldsContent1 = open("yields.tex","r").read()
 yieldsContent2 = yieldsContent1[:]
+yieldsContent3 = yieldsContent1[:]
+yieldsContent4 = yieldsContent1[:]
 
-yieldsFile1, yieldsFile2 = open("yieldsFilled1.tex","w"), open("yieldsFilled2.tex","w")
+yieldsFile1 = open("yieldsFilled1.tex","w")
+yieldsFile2 = open("yieldsFilled2.tex","w")
+yieldsFile3 = open("yieldsFilled3.tex","w")
+yieldsFile4 = open("yieldsFilled4.tex","w")
+
 yieldsContent1 = yieldsContent1.replace("TITLEHH", "$\\delta$WZ/WZ for \\textbf{HighHigh}")
 yieldsContent1 = yieldsContent1.replace("TITLEHL", "$\\delta$WZ/WZ for \\textbf{HighLow}")
+
 yieldsContent2 = yieldsContent2.replace("TITLEHH", "Total (WZ) for \\textbf{HighHigh}")
 yieldsContent2 = yieldsContent2.replace("TITLEHL", "Total (WZ) for \\textbf{HighLow}")
 
+yieldsContent3 = yieldsContent3.replace("TITLEHH", "\\textbf{Total} (WZ) for \\textbf{HighHigh}")
+yieldsContent3 = yieldsContent3.replace("TITLEHL", "\\textbf{Total} (WZ) for \\textbf{HighLow}")
+yieldsContent3 = yieldsContent3.replace(" 30}", " 50}")
+
+yieldsContent4 = yieldsContent4.replace("TITLEHH", "SS \\textbf{WZ} for \\textbf{HighHigh}")
+yieldsContent4 = yieldsContent4.replace("TITLEHL", "SS \\textbf{WZ} for \\textbf{HighLow}")
+yieldsContent4 = yieldsContent4.replace(" 30}", " 50}")
+
 for srString in srStrings:
     finalT, finalWZ, finalRelErr = SRerrors(SRtoCuts(srString))
+    total, WZ = srCodes[srString]
+
     yieldsContent1 = yieldsContent1.replace( srString, "\\textbf{%.2f} (%s)" % ( finalRelErr, srString ) )
     yieldsContent2 = yieldsContent2.replace( srString, "\\textbf{%.2f} (%.2f)" % ( finalT, scaleFactor*finalWZ) )
+    yieldsContent3 = yieldsContent3.replace( srString, "\\textbf{%.2f} (%.2f)" % ( total, WZ ) )
+    yieldsContent4 = yieldsContent4.replace( srString, "%.2f \\pm~%.2f" % ( WZ, finalRelErr*WZ ) )
 
 yieldsFile1.write(yieldsContent1)
 yieldsFile1.close()
 yieldsFile2.write(yieldsContent2)
 yieldsFile2.close()
+yieldsFile3.write(yieldsContent3)
+yieldsFile3.close()
+yieldsFile4.write(yieldsContent4)
+yieldsFile4.close()
+
 

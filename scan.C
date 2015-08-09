@@ -169,7 +169,7 @@ int scan(){
             fill(h1D_hyp_class_vec.at(iSample), ss::hyp_class(), scale);
 
             // this guarantees that the third lepton makes a Z with one of the first two leptons
-            // if(ss::hyp_class() != 6) continue;
+            if(ss::hyp_class() != 6) continue;
 
             // require that leptons have pt>20 and |eta|<2.4 ("loose requirements")
             if( ss::lep1_p4().pt() < 20.0 || ss::lep2_p4().pt() < 20.0 || ss::lep3_p4().pt() < 20.0 ) continue;
@@ -270,7 +270,7 @@ int scan(){
             fill(h1D_ht_vec.at(iSample),ss::ht(), scale);
 
             // fill(h1D_mt_vec.at(iSample),ss::mt(), scale);
-            // fill(h1D_zmass_vec.at(iSample),zmass, scale); 
+            fill(h1D_zmass_vec.at(iSample),zmass, scale); 
 
 
             if(!ss::is_real_data()) {
@@ -327,7 +327,8 @@ int scan(){
     // data = h1D_yields_LL_vec.back(); h1D_yields_LL_vec.pop_back();
     // dataMCplotMaker(data,h1D_yields_LL_vec ,titles,"LL yields",spec,com+"h1D_yields_LL.pdf --isLinear --xAxisOverride SR "+LLbins);
 
-    // dataMCplotMaker(null,h1D_zmass_vec     ,titles,"m_{Z}",spec,com+"h1D_zmass.pdf                   --isLinear --xAxisOverride [GeV] "+pct);
+    data = h1D_zmass_vec.back(); h1D_zmass_vec.pop_back();
+    dataMCplotMaker(data,h1D_zmass_vec     ,titles,"m_{ll}",spec,com+"h1D_zmass.pdf                   --isLinear --xAxisOverride [GeV]");
     // dataMCplotMaker(null,h1D_hyp_class_vec ,titles,"hyp_class (no cuts)",spec,com+"h1D_hyp_class.pdf            --xAxisOverride id    "+pct);
     // dataMCplotMaker(null,h1D_btagval_vec   ,titles,"Btag disc",spec,com+"h1D_btagval.pdf             --isLinear --xAxisOverride disc  "+pct);
 
