@@ -12,13 +12,12 @@
 #include "TChain.h"
 
 //Class files
-#include "SS.h"
+#include "../classFiles/v4.00/SS.h"
 
 #include "utils.C"
 #include "../CORE/SSSelections.h"
 #include "../CORE/Tools/dorky/dorky.cc"
-// #include "../CORE/Tools/goodrun.cc"
-// #include "Include.C"
+#include "../CORE/Tools/goodrun.cc"
 
 using namespace std;
 using namespace duplicate_removal;
@@ -143,15 +142,15 @@ int srscan(){
     TChain *ch = new TChain("t");
     std::vector<std::string> titles;
 
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTBAR_0.root");  titles.push_back("tt");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/DY*_0.root");    titles.push_back("DY");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTW_0.root");    titles.push_back("ttW");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/TTZ_0.root");    titles.push_back("ttZ");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WJets*_0.root"); titles.push_back("WJets");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/WZ_0.root");     titles.push_back("WZ");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v1.27/ZZ_0.root");     titles.push_back("ZZ");
-    // ch->Add("/nfs-7/userdata/ss2015/ssBabies/v2.03/*.root");
-    ch->Add("/nfs-7/userdata/ss2015/ssBabies/v2.05/Data*_0.root");
+    TString tag = "v4.00";
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/TTBAR.root");  titles.push_back("tt");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/DY*.root");    titles.push_back("DY");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/TTW.root");    titles.push_back("ttW");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/TTZ*.root");    titles.push_back("ttZ");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/WJets*.root"); titles.push_back("WJets");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/WZ3LNU.root");     titles.push_back("WZ");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/WZZ.root");     titles.push_back("WZZ");
+    ch->Add("/nfs-7/userdata/ss2015/ssBabies/"+tag+"/Data*.root");
     // ch->Add("/home/users/namin/2015/ss/v201/SSAnalysis/batch/babies/*.root");
 
     int nEventsTotal = 0;
@@ -190,7 +189,7 @@ int srscan(){
     TH2F* h2D_ht_njets_wz = new TH2F("ht_njets_wz", "", 20,0,1000, 7,0,7);
     TH2F* h2D_ht_sumleppt_wz = new TH2F("ht_sumleppt_wz", "", 20,0,1000, 40,0,400);
 
-    vector<TString> files = {"TTBAR","DY","TTW","TTZ","WJets","WZ","ZZ","Data"}; 
+    vector<TString> files = {"TTBAR","DY","TTW","TTZ","WJets","WZ","WZZ","Data"}; 
     for(int i = 0; i < files.size(); i++) {
 
         TH1F* h1D_njets_file = new TH1F("njets"+files.at(i), "Njets;;Entries", 10, 0, 10);
@@ -247,7 +246,7 @@ int srscan(){
         else if(filename.Contains("TTZ"))   { filename = "TTZ";   iSample = 3; }
         else if(filename.Contains("WJets")) { filename = "WJets"; iSample = 4; }
         else if(filename.Contains("WZ"))    { filename = "WZ";    iSample = 5; }
-        else if(filename.Contains("ZZ"))    { filename = "ZZ";    iSample = 6; }
+        else if(filename.Contains("WZZ"))    { filename = "WZZ";    iSample = 6; }
         else if(filename.Contains("data"))  { filename = "Data";  iSample = 7; }
         else { std::cout << "ERROR: I don't know what " << filename << " is! Skipping file " << filename << std::endl; continue; }
 
@@ -278,7 +277,7 @@ int srscan(){
             // if(ss::hyp_class() != 3) continue;
             //
             // this guarantees that the third lepton makes a Z with one of the first two leptons
-            if(ss::hyp_class() != 6) continue;
+            if( ! (ss::hyp_class() == 6 && ss::madeExtraZ()) ) continue;
 
             // require that leptons have pt>20 and |eta|<2.4 ("loose requirements")
             if( ss::lep1_p4().pt() < 20.0 || ss::lep2_p4().pt() < 20.0 || ss::lep3_p4().pt() < 20.0 ) continue;
@@ -374,20 +373,20 @@ int srscan(){
     std::string HLbins = " --xAxisVerticalBinLabels --xAxisBinLabels 1B,2B,3B,4B,5B,6B,7B,8B,9B,10B,11B,12B,13B,14B,15B,16B,17B,18B,19B,20B,21B,22B,23B,24B,25B,26B";
     std::string LLbins = " --xAxisVerticalBinLabels --xAxisBinLabels 1C,2C,3C,4C,5C,6C,7C,8C";
 
-    data = h1D_njets_vec.back(); h1D_njets_vec.pop_back(); dataMCplotMaker(data,h1D_njets_vec    ,titles,"Njets",spec,com+"h1D_njets.pdf           --isLinear --vLine 5 --xAxisOverride njets");
-    data = h1D_ht_vec.back(); h1D_ht_vec.pop_back(); dataMCplotMaker(data,h1D_ht_vec             ,titles,"H_{T}",spec,com+"h1D_ht.pdf              --isLinear --vLine 300 --xAxisOverride [GeV]");
-    data = h1D_mtmin_vec.back(); h1D_mtmin_vec.pop_back(); dataMCplotMaker(data,h1D_mtmin_vec    ,titles,"m_{T,min}",spec,com+"h1D_mtmin.pdf       --isLinear --vLine 120 --xAxisOverride [GeV]");
-    data = h1D_met_vec.back(); h1D_met_vec.pop_back(); dataMCplotMaker(data,h1D_met_vec          ,titles,"#slash{E}_{T}",spec,com+"h1D_met.pdf     --isLinear --vLine 200 --xAxisOverride [GeV]");
-    data = h1D_nbtags_vec.back(); h1D_nbtags_vec.pop_back(); dataMCplotMaker(data,h1D_nbtags_vec ,titles,"Nbtags",spec,com+"h1D_nbtags.pdf         --isLinear --vLine 1 --xAxisOverride n");
-    data = h1D_lep1pt_vec.back(); h1D_lep1pt_vec.pop_back(); dataMCplotMaker(data,h1D_lep1pt_vec ,titles,"p_{T}(lep_{1})",spec,com+"h1D_lep1pt.pdf --isLinear --vLine 25 --xAxisOverride [GeV]");
-    data = h1D_lep2pt_vec.back(); h1D_lep2pt_vec.pop_back(); dataMCplotMaker(data,h1D_lep2pt_vec ,titles,"p_{T}(lep_{2})",spec,com+"h1D_lep2pt.pdf --isLinear --vLine 25 --xAxisOverride [GeV]");
+    // data = h1D_njets_vec.back(); h1D_njets_vec.pop_back(); dataMCplotMaker(data,h1D_njets_vec    ,titles,"Njets",spec,com+"h1D_njets.pdf           --isLinear --vLine 5 --xAxisOverride njets");
+    // data = h1D_ht_vec.back(); h1D_ht_vec.pop_back(); dataMCplotMaker(data,h1D_ht_vec             ,titles,"H_{T}",spec,com+"h1D_ht.pdf              --isLinear --vLine 300 --xAxisOverride [GeV]");
+    // data = h1D_mtmin_vec.back(); h1D_mtmin_vec.pop_back(); dataMCplotMaker(data,h1D_mtmin_vec    ,titles,"m_{T,min}",spec,com+"h1D_mtmin.pdf       --isLinear --vLine 120 --xAxisOverride [GeV]");
+    // data = h1D_met_vec.back(); h1D_met_vec.pop_back(); dataMCplotMaker(data,h1D_met_vec          ,titles,"#slash{E}_{T}",spec,com+"h1D_met.pdf     --isLinear --vLine 200 --xAxisOverride [GeV]");
+    // data = h1D_nbtags_vec.back(); h1D_nbtags_vec.pop_back(); dataMCplotMaker(data,h1D_nbtags_vec ,titles,"Nbtags",spec,com+"h1D_nbtags.pdf         --isLinear --vLine 1 --xAxisOverride n");
+    // data = h1D_lep1pt_vec.back(); h1D_lep1pt_vec.pop_back(); dataMCplotMaker(data,h1D_lep1pt_vec ,titles,"p_{T}(lep_{1})",spec,com+"h1D_lep1pt.pdf --isLinear --vLine 25 --xAxisOverride [GeV]");
+    // data = h1D_lep2pt_vec.back(); h1D_lep2pt_vec.pop_back(); dataMCplotMaker(data,h1D_lep2pt_vec ,titles,"p_{T}(lep_{2})",spec,com+"h1D_lep2pt.pdf --isLinear --vLine 25 --xAxisOverride [GeV]");
 
 
-    drawHist2D(h2D_ht_sumleppt_wz , "pdfs/h2D_ht_sumleppt_wz.pdf" , "--logscale --title WZ: p_{T}(lep_{1})+p_{T}(lep_{2}) vs H_{T} --xlabel  sum H_{T} --ylabel leppt");
-    drawHist2D(h2D_ht_njets_wz , "pdfs/h2D_ht_njets_wz.pdf" , "--logscale --title WZ: Njets vs H_{T} --xlabel  H_{T} --ylabel Njets");
-    drawHist2D(h2D_ptlep1_ptlep2_wz , "pdfs/h2D_ptlep1_ptlep2_wz.pdf" , "--logscale --title WZ: p_{T}(lep_{1}) vs p_{T}(lep_{2}) --xlabel  ptlep2 --ylabel ptlep1");
-    drawHist2D(h2D_njets_nbtags_wz  , "pdfs/h2D_njets_nbtags_wz.pdf"  , "--logscale --title WZ: Njets vs Nbtags --xlabel  nbtags --ylabel njets");
-    drawHist2D(h2D_met_mtmin_wz     , "pdfs/h2D_met_mtmin_wz.pdf"     , "--logscale --title WZ: #slash{E}_{T} vs m_{T,min} --xlabel  mtmin --ylabel met");
+    // drawHist2D(h2D_ht_sumleppt_wz , "pdfs/h2D_ht_sumleppt_wz.pdf" , "--logscale --title WZ: p_{T}(lep_{1})+p_{T}(lep_{2}) vs H_{T} --xlabel  sum H_{T} --ylabel leppt");
+    // drawHist2D(h2D_ht_njets_wz , "pdfs/h2D_ht_njets_wz.pdf" , "--logscale --title WZ: Njets vs H_{T} --xlabel  H_{T} --ylabel Njets");
+    // drawHist2D(h2D_ptlep1_ptlep2_wz , "pdfs/h2D_ptlep1_ptlep2_wz.pdf" , "--logscale --title WZ: p_{T}(lep_{1}) vs p_{T}(lep_{2}) --xlabel  ptlep2 --ylabel ptlep1");
+    // drawHist2D(h2D_njets_nbtags_wz  , "pdfs/h2D_njets_nbtags_wz.pdf"  , "--logscale --title WZ: Njets vs Nbtags --xlabel  nbtags --ylabel njets");
+    // drawHist2D(h2D_met_mtmin_wz     , "pdfs/h2D_met_mtmin_wz.pdf"     , "--logscale --title WZ: #slash{E}_{T} vs m_{T,min} --xlabel  mtmin --ylabel met");
 
     return 0;
 }
